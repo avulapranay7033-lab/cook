@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Cooking Competition</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#fff8f0; color:#333; position: relative; }
+/* → Side Decoration Images */
+#leftDecoration, #rightDecoration {
+    position: fixed; top: 0; width: 80px; height: 100%; z-index: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 10px;
+}
+#leftDecoration img, #rightDecoration img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; }
+#leftDecoration { left: 0; }
+#rightDecoration { right: 0; }
+
+header { background: linear-gradient(90deg, #ff7043, #ff9800); color:white; padding:20px; text-align:center; position: relative; z-index:1;}
+nav { background:#333; padding:10px; text-align:center; position: relative; z-index:1;}
+nav a { color:white; margin:0 15px; text-decoration:none; font-weight:bold; }
+nav a:hover { text-decoration:underline; }
+section { padding:30px; position: relative; z-index:1; }
+.card-container { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; }
+.card { background:white; padding:20px; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
+.card h3 { color:#ff7043; }
+button { background:#ff7043; border:none; color:white; padding:10px 15px; border-radius:5px; cursor:pointer; }
+button:hover { background:#e64a19; }
+
+/* → Forms */
+#recipeForm, #registrationForm { display:none; background:white; padding:20px; margin-top:20px; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:500px;}
+input, textarea, select { width:100%; padding:8px; margin:8px 0;}
+.message { margin-top:10px; color:green; font-weight:bold; }
+.recipe-media { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.recipe-media img, .recipe-media video { width:120px; height:80px; object-fit:cover; border-radius:5px; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Online Cooking Competition</h1>
+<p>Showcase Your Culinary Skills • Cook • Compete • Win</p>
+</header>
+
+<nav>
+<a href="#about">About</a>
+<a href="#roles">Roles</a>
+<a href="#registration">Register</a>
+<a href="#submission">Recipe Submission</a>
+<a href="#voting">Voting</a>
+<a href="#certificates">Certificates</a>
+<a href="#admin">Admin</a>
+</nav>
+
+<section id="about">
+<h2>About the Competition</h2>
+<p>This digital platform hosts an <b>Online Cooking Competition</b> where chefs showcase their cooking talent.</p>
+</section>
+
+<section id="roles">
+<h2>Participants & Roles</h2>
+<div class="card-container">
+<div class="card"><h3>Chef</h3><p>Submit recipes, steps, and cooking media.</p></div>
+<div class="card"><h3>Audience</h3><p>View recipes and vote for favorites.</p></div>
+<div class="card"><h3>Admin</h3><p>Manage submissions, voting, and certificates.</p></div>
+</div>
+</section>
+
+<!-- Participant Registration -->
+<section id="registration">
+<h2>Participant Registration</h2>
+<div id="registrationForm" style="display:block;">
+    <label>Full Name</label>
+    <input type="text" id="participantName" placeholder="Enter your full name">
+    <label>Email</label>
+    <input type="email" id="participantEmail" placeholder="e.g., nxgx@gmail.com">
+    <label>Contact Number</label>
+    <input type="text" id="participantPhone" placeholder="Enter your 10-digit phone number">
+    <label>Role</label>
+    <select id="participantRole">
+        <option value="">Select Role</option>
+        <option value="chef">Chef</option>
+        <option value="audience">Audience</option>
+    </select>
+    <button onclick="registerParticipant()">Register</button>
+    <p id="registrationMsg" class="message"></p>
+</div>
+</section>
+
+<section id="submission">
+<h2>Recipe Submission</h2>
+<ul>
+<li>Recipe Name</li>
+<li>Ingredients</li>
+<li>Cooking Method</li>
+<li>Preparation Time</li>
+<li>Images or Videos</li>
+</ul>
+<button onclick="openRecipeForm()">Submit Recipe</button>
+<div id="recipeForm">
+<h3>Recipe Submission Form</h3>
+<label>Recipe Name</label>
+<input type="text" id="recipeName">
+<label>Ingredients</label>
+<textarea id="ingredients"></textarea>
+<label>Cooking Method</label>
+<textarea id="method"></textarea>
+<label>Preparation Time</label>
+<input type="text" id="prepTime">
+<label>Upload Images</label>
+<input type="file" id="recipeImages" accept="image/*" multiple>
+<label>Upload Videos</label>
+<input type="file" id="recipeVideos" accept="video/*" multiple>
+<button onclick="submitRecipe()">Submit</button>
+<p id="submitMsg" class="message"></p>
+</div>
+</section>
+
+<section id="voting">
+<h2>Voting System</h2>
+<p>Audience can vote once per recipe.</p>
+<div id="voteList"></div>
+<p id="voteMsg" class="message"></p>
+<button onclick="voteNow()">Vote Now</button>
+</section>
+
+<section id="certificates">
+<h2>Certificates & Rewards</h2>
+<p>Participants receive digital certificates and rewards.</p>
+<button onclick="downloadCertificate()">Download Certificate</button>
+<p id="certMsg" class="message"></p>
+</section>
+
+<section id="admin">
+<h2>Admin Panel</h2>
+<div id="adminLoginForm">
+    <label>Admin Email</label>
+    <input type="email" id="adminEmail" placeholder="Enter admin email">
+    <label>Password</label>
+    <input type="password" id="adminPassword" placeholder="Enter password">
+    <button onclick="adminLogin()">Login as Admin</button>
+    <p id="adminMsg" class="message"></p>
+</div>
+<div id="adminPanel" style="margin-top:10px; display:none;">
+    <button onclick="showParticipants()">View Participants & Recipes</button>
+    <div id="adminData" style="margin-top:10px;"></div>
+</div>
+</section>
+
+<footer>
+<p>© 2026 Online Cooking Competition | Inspired by India’s Love for Food 🍛</p>
+</footer>
+
+<script>
+let registeredParticipant = null;
+let participants = [];
+let recipes = [];
+let votes = {};
+let adminLoggedIn = false;
+const adminCredentials = { email:"pranay@gmail.com", password:"939180" };
+
+// Watermark image
+const watermarkSrc = "27.avif";
+
+// Registration
+function registerParticipant(){
+    const name = document.getElementById("participantName").value.trim();
+    const email = document.getElementById("participantEmail").value.trim();
+    const phone = document.getElementById("participantPhone").value.trim();
+    const role = document.getElementById("participantRole").value;
+    if(!name || !email || !phone || !role){ alert("All fields required!"); return; }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailPattern.test(email)){ alert("Invalid email"); return; }
+    const phonePattern=/^\d{10}$/;
+    if(!phonePattern.test(phone)){ alert("Phone must be 10 digits"); return; }
+    if(participants.some(p=>p.email===email)){ alert("Already registered"); return; }
+    const participant = {name,email,phone,role};
+    participants.push(participant);
+    registeredParticipant = participant;
+    document.getElementById("registrationMsg").textContent = `Participant '${name}' registered successfully as ${role}!`;
+    document.getElementById("participantName").value="";
+    document.getElementById("participantEmail").value="";
+    document.getElementById("participantPhone").value="";
+    document.getElementById("participantRole").value="";
+}
+
+// Recipe
+function openRecipeForm(){
+    if(!registeredParticipant){ alert("Register first!"); return; }
+    if(registeredParticipant.role!=="chef"){ alert("Only chefs can submit!"); return; }
+    document.getElementById("recipeForm").style.display="block";
+}
+
+function submitRecipe(){
+    if(!registeredParticipant || registeredParticipant.role!=="chef"){ alert("Only chefs!"); return; }
+    const name=document.getElementById("recipeName").value.trim();
+    const ingredients=document.getElementById("ingredients").value.trim();
+    const method=document.getElementById("method").value.trim();
+    const prepTime=document.getElementById("prepTime").value.trim();
+    const images=Array.from(document.getElementById("recipeImages").files);
+    const videos=Array.from(document.getElementById("recipeVideos").files);
+    if(!name || !ingredients || !method || !prepTime){ alert("Fill all fields"); return; }
+    const recipe={participant:registeredParticipant,name,ingredients,method,prepTime,images,videos,voteCount:0};
+    recipes.push(recipe);
+    document.getElementById("submitMsg").textContent = `Recipe '${name}' submitted successfully!`;
+    document.getElementById("recipeName").value="";
+    document.getElementById("ingredients").value="";
+    document.getElementById("method").value="";
+    document.getElementById("prepTime").value="";
+    document.getElementById("recipeImages").value="";
+    document.getElementById("recipeVideos").value="";
+}
+
+// Voting
+function voteNow(){
+    if(!registeredParticipant){ alert("Register first"); return; }
+    if(registeredParticipant.role!=="audience"){ alert("Only audience can vote"); return; }
+    if(recipes.length===0){ alert("No recipes"); return; }
+    const voteList=document.getElementById("voteList");
+    voteList.innerHTML = recipes.map(r => 
+      `<div>${r.name} by ${r.participant.name} <button onclick="castVote('${r.name}')">Vote</button></div>`).join('');
+}
+
+function castVote(recipeName){
+    const recipe = recipes.find(r=>r.name===recipeName);
+    if(!votes[registeredParticipant.email]) votes[registeredParticipant.email]=[];
+    if(votes[registeredParticipant.email].includes(recipeName)){ alert("Already voted"); return; }
+    votes[registeredParticipant.email].push(recipeName);
+    recipe.voteCount++;
+    document.getElementById("voteMsg").textContent=`Voted for '${recipeName}'! Total votes: ${recipe.voteCount}`;
+}
+
+// Certificate Download
+function downloadCertificate(){
+    if(!registeredParticipant){ alert("Register first"); return; }
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000; canvas.height = 700;
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#fff8f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Border
+    ctx.strokeStyle = '#ff7043';
+    ctx.lineWidth = 12;
+    ctx.strokeRect(30, 30, canvas.width-60, canvas.height-60);
+
+    // Watermark
+    const watermark = new Image();
+    watermark.crossOrigin = "anonymous";
+    watermark.src = watermarkSrc;
+    watermark.onload = function(){
+        ctx.globalAlpha = 0.15;
+        ctx.drawImage(watermark, canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
+        ctx.globalAlpha = 1;
+
+        // Text
+        ctx.fillStyle = '#ff7043';
+        ctx.font = '48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Certificate of Participation', canvas.width/2, 120);
+
+        ctx.fillStyle = '#333';
+        ctx.font = '26px Arial';
+        ctx.fillText('This certificate is proudly presented to', canvas.width/2, 200);
+
+        ctx.font = '38px Arial';
+        ctx.fillText(registeredParticipant.name, canvas.width/2, 280);
+
+        ctx.font = '22px Arial';
+        ctx.fillText('For participating in the Online Cooking Competition', canvas.width/2, 360);
+
+        ctx.font = '18px Arial';
+        ctx.fillText('© 2026 Online Cooking Competition', canvas.width/2, canvas.height - 50);
+
+        // Download
+        const link = document.createElement('a');
+        link.download = `${registeredParticipant.name}_certificate.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        document.getElementById("certMsg").textContent = "Certificate downloaded successfully!";
+    }
+}
+
+// Admin
+function adminLogin(){
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
+    if(email===adminCredentials.email && password===adminCredentials.password){
+        adminLoggedIn=true;
+        document.getElementById("adminMsg").textContent="Admin logged in successfully!";
+        document.getElementById("adminLoginForm").style.display="none";
+        document.getElementById("adminPanel").style.display="block";
+    }else{
+        document.getElementById("adminMsg").textContent="Invalid admin credentials!";
+    }
+}
+
+function showParticipants(){
+    if(!adminLoggedIn){ alert("Only admin"); return; }
+    const panel=document.getElementById("adminData");
+    panel.innerHTML="";
+    if(participants.length===0){ panel.textContent="No participants"; return; }
+
+    participants.forEach(p=>{
+        const div=document.createElement("div");
+        div.style.border="1px solid #ff7043";
+        div.style.padding="10px"; div.style.margin="5px"; div.style.borderRadius="5px";
+        const participantRecipes = recipes.filter(r=>r.participant.email===p.email);
+        let mediaHTML="";
+        participantRecipes.forEach(r=>{
+            if(r.images.length>0 || r.videos.length>0){
+                mediaHTML+=`<div class="recipe-media">`;
+                r.images.forEach(img=>{ const url=URL.createObjectURL(img); mediaHTML+=`<img src="${url}">`; });
+                r.videos.forEach(v=>{ const url=URL.createObjectURL(v); mediaHTML+=`<video src="${url}" controls></video>`; });
+                mediaHTML+=`</div>`;
+            }
+        });
+        div.innerHTML=`<strong>Name:</strong> ${p.name}<br>
+        <strong>Email:</strong> ${p.email}<br>
+        <strong>Phone:</strong> ${p.phone}<br>
+        <strong>Role:</strong> ${p.role}<br>
+        <strong>Recipes:</strong> ${participantRecipes.map(r=>r.name).join(", ")||"No recipes"}
+        ${mediaHTML}`;
+        panel.appendChild(div);
+    });
+}
+
+</script>
+</body>
+</html>
+
+
