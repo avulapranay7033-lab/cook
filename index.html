@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Cooking Competition</title>
+
+<style>
+body{font-family:Arial;margin:0;background:#fff8f0;}
+header{background:linear-gradient(90deg,#ff7043,#ff9800);color:#fff;padding:20px;text-align:center;}
+nav{background:#333;padding:10px;text-align:center;}
+nav a{color:white;margin:0 10px;text-decoration:none;font-weight:bold;}
+section{padding:20px;}
+.card{background:#fff;padding:15px;margin:10px 0;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.1);}
+button{background:#ff7043;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;}
+button:hover{background:#e64a19;}
+input,textarea,select{width:100%;padding:6px;margin:6px 0;}
+.message{color:green;font-weight:bold}
+
+/* Admin fixed */
+#adminLogo{
+ position:fixed;top:20px;right:20px;width:45px;height:45px;
+ background:#ff7043;border-radius:50%;text-align:center;
+ line-height:45px;color:#fff;font-weight:bold;cursor:pointer;z-index:1000;
+}
+#adminContainer{
+ display:none;position:fixed;top:80px;right:20px;width:320px;
+ background:#fff;padding:15px;border-radius:10px;
+ box-shadow:0 4px 10px rgba(0,0,0,0.3);z-index:1000;
+}
+
+/* Certificate */
+.certificate{
+ width:800px;height:550px;padding:40px;
+ background:url("https://i.imgur.com/8Km9tLL.png") no-repeat center;
+ background-size:cover;text-align:center;font-family:Georgia,serif;
+}
+.certificate h1{color:#b71c1c;font-size:40px;}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Online Cooking Competition</h1>
+<p>Cook • Compete • Win 🍛</p>
+</header>
+
+<nav>
+<a href="#register">Register</a>
+<a href="#submit">Submit</a>
+<a href="#vote">Vote</a>
+<a href="#certificate">Certificate</a>
+</nav>
+
+<!-- REGISTER -->
+<section id="register">
+<h2>Registration</h2>
+<input id="name" placeholder="Full Name">
+<input id="email" placeholder="Email">
+<input id="phone" placeholder="10-digit Phone">
+<select id="role">
+<option value="">Select Role</option>
+<option value="chef">Chef</option>
+<option value="audience">Audience</option>
+</select>
+<button onclick="register()">Register</button>
+<p id="regMsg" class="message"></p>
+</section>
+
+<!-- SUBMIT -->
+<section id="submit">
+<h2>Recipe Submission</h2>
+<button onclick="openRecipe()">Submit Recipe</button>
+<div id="recipeForm" style="display:none">
+<input id="rname" placeholder="Recipe Name">
+<textarea id="ing" placeholder="Ingredients"></textarea>
+<textarea id="method" placeholder="Method"></textarea>
+<input id="time" placeholder="Preparation Time">
+<button onclick="submitRecipe()">Submit</button>
+</div>
+<p id="subMsg" class="message"></p>
+</section>
+
+<!-- VOTE -->
+<section id="vote">
+<h2>Voting</h2>
+<button onclick="showVotes()">Show Recipes</button>
+<div id="voteList"></div>
+</section>
+
+<!-- CERTIFICATE -->
+<section id="certificate">
+<h2>Certificate</h2>
+<button onclick="downloadCertificate()">Download Certificate</button>
+</section>
+
+<!-- ADMIN -->
+<div id="adminLogo" onclick="toggleAdmin()">A</div>
+
+<div id="adminContainer">
+<h3>Admin Login</h3>
+<input id="adminEmail" placeholder="Admin Email">
+<input id="adminPass" type="password" placeholder="Password">
+<button onclick="adminLogin()">Login</button>
+<div id="adminData"></div>
+<button id="clearBtn" onclick="clearData()" style="display:none;">Clear All Data</button>
+</div>
+
+<script>
+let participants = JSON.parse(localStorage.getItem("participants")) || [];
+let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
+let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+let adminLoggedIn = false;
+
+function save(){
+ localStorage.setItem("participants", JSON.stringify(participants));
+ localStorage.setItem("recipes", JSON.stringify(recipes));
+ localStorage.setItem("currentUser", JSON.stringify(currentUser));
+}
+
+/* REGISTER */
+function register(){
+ const uname = document.getElementById("name").value.trim();
+ const uemail = document.getElementById("email").value.trim();
+ const uphone = document.getElementById("phone").value.trim();
+ const urole = document.getElementById("role").value;
+
+ const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}$/;
+ const phonePattern = /^\d{10}$/;
+
+ if(uname==="" || uemail==="" || uphone==="" || urole===""){
+   alert("All fields required"); return;
+ }
+ if(!emailPattern.test(uemail)){
+   alert("Enter valid email"); return;
+ }
+ if(!phonePattern.test(uphone)){
+   alert("Phone must be 10 digits"); return;
+ }
+
+ // Prevent duplicate registration
+ const exists = participants.find(p => p.email === uemail);
+ if(exists){
+   alert("This email is already registered");
+   return;
+ }
+
+ currentUser = {name: uname, email: uemail, phone: uphone, role: urole};
+ participants.push(currentUser);
+ save();
+
+ document.getElementById("regMsg").innerText = "Registration successful!";
+ document.getElementById("name").value = "";
+ document.getElementById("email").value = "";
+ document.getElementById("phone").value = "";
+ document.getElementById("role").value = "";
+}
+
+/* RECIPE */
+function openRecipe(){
+ if(!currentUser || currentUser.role !== "chef"){
+   alert("Only Chef can submit"); return;
+ }
+ document.getElementById("recipeForm").style.display = "block";
+}
+
+function submitRecipe(){
+ const rname = document.getElementById("rname").value.trim();
+ const ing = document.getElementById("ing").value.trim();
+ const method = document.getElementById("method").value.trim();
+ const time = document.getElementById("time").value.trim();
+
+ if(!rname || !ing || !method || !time){
+   alert("All fields are required");
+   return;
+ }
+
+ recipes.push({
+   name: rname,
+   ing: ing,
+   method: method,
+   time: time,
+   chef: currentUser.name,
+   votes: 0
+ });
+
+ save();
+ document.getElementById("subMsg").innerText = "Recipe submitted!";
+}
+
+/* VOTING */
+function showVotes(){
+ if(!currentUser || currentUser.role !== "audience"){
+   alert("Only Audience can vote"); return;
+ }
+ voteList.innerHTML = "";
+ recipes.forEach(r => {
+   voteList.innerHTML += `
+   <div class="card">
+     <h3>${r.name}</h3>
+     <p><b>Chef:</b> ${r.chef}</p>
+     <p><b>Ingredients:</b> ${r.ing}</p>
+     <p><b>Method:</b> ${r.method}</p>
+     <p><b>Time:</b> ${r.time}</p>
+     <button onclick="vote('${r.name}')">Vote (${r.votes})</button>
+   </div>`;
+ });
+}
+
+function vote(name){
+ recipes.find(r => r.name === name).votes++;
+ save();
+ showVotes();
+}
+
+/* CERTIFICATE */
+function downloadCertificate(){
+ if(!currentUser){alert("Register first"); return;}
+ const w = window.open("", "_blank");
+ w.document.write(`
+ <div class="certificate">
+   <h1>Certificate of Participation</h1>
+   <p>This is proudly presented to</p>
+   <h2>${currentUser.name}</h2>
+   <p>Role: ${currentUser.role}</p>
+ </div>`);
+}
+
+/* ADMIN */
+function toggleAdmin(){
+ adminContainer.style.display = adminContainer.style.display === "block" ? "none" : "block";
+}
+
+function adminLogin(){
+ if(adminEmail.value === "pranay@gmail.com" && adminPass.value === "939180"){
+   adminLoggedIn = true;
+   adminData.innerHTML = "<b>Participants:</b><br>" + participants.map(p => p.name).join("<br>");
+   document.getElementById("clearBtn").style.display = "block";
+ } else {
+   alert("Invalid Admin");
+ }
+}
+
+function clearData(){
+ if(adminLoggedIn && confirm("Delete all data?")){
+   localStorage.clear();
+   location.reload();
+ }
+}
+</script>
+
+</body>
+</html>
+
